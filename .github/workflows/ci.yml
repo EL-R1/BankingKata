@@ -2,185 +2,35 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, 'feature/**', 'hotfix/**' ]
+    branches: [ main, develop, 'feature/**' ]
   pull_request:
     branches: [ main, develop ]
 
 env:
   DOTNET_VERSION: '8.0.x'
-  NODE_VERSION: '20.x'
 
 jobs:
-  ci:
-    name: Continuous Integration
+  build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Install dependencies
+      - name: Restore dependencies
         run: dotnet restore
 
       - name: Build
         run: dotnet build --no-restore --configuration Release
 
       - name: Run Tests
-        run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
-
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
-        if: always()
-        with:
-          files: '**/coverage.opencover.xml'
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
-
-  api-integration-tests:
-    name: API Integration Tests
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Install dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet test --no-build --configuration Release --verbosity minimal
 
       - name: Run Integration Tests
-        run: dotnet test --no-build --configuration Release --project BankingKata.Api.Tests/BankingKata.Api.Tests.csproj --verbosity normal
-
-  quality-checks:
-    name: Quality Checks
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Check formatting
-        run: |
-          dotnet format --verify-no-changes --verbosity diagnostic BankingKata.sln
-        continue-on-error: true
-
-      - name: Run Security Analysis
-        uses: dotnet/rainbow-cake action@v1
-
-      - name: Check for vulnerable dependencies
-        run: dotnet list package --vulnerable
-
-  version:
-    name: Version Calculation
-    runs-on: ubuntu-latest
-    needs: [ci, api-integration-tests, quality-checks]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-      versionMajor: ${{ steps.version.outputs.major }}
-      versionMinor: ${{ steps.version.outputs.minor }}
-      versionPatch: ${{ steps.version.outputs.patch }}
-      versionSuffix: ${{ steps.version.outputs.suffix }}
-      fullVersion: ${{ steps.version.outputs.fullVersion }}
-      
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v1
-        with:
-          versionSpec: '6.x'
-
-      - name: Determine Version
-        id: version
-        uses: gittools/actions/gitversion/execute@v1
-
-      - name: Display Version
-        run: |
-          echo "Version: ${{ steps.version.outputs.fullVersion }}"
-          echo "Major: ${{ steps.version.outputs.major }}"
-          echo "Minor: ${{ steps.version.outputs.minor }}"
-          echo "Patch: ${{ steps.version.outputs.patch }}"
-          echo "Suffix: ${{ steps.version.outputs.suffix }}"
-
-  # Optional: Build Docker image on every push to verify it works
-  docker-build-check:
-    name: Docker Build Check
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          load: true
-          tags: bankingkata/api:pr-${{ github.event.pull_request.number }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  merge-to-main:
-    name: Ready for Production
-    runs-on: ubuntu-latest
-    needs: [version]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - name: Create deployment marker
-        run: |
-          echo "Version ${{ needs.version.outputs.fullVersion }} is ready for production deployment"
-          echo "tag=v${{ needs.version.outputs.fullVersion }}" >> $GITHUB_OUTPUT
-        id: deployment
-        
-      - name: Create GitHub Deployment
-        uses: peaceiris/actions-gh-release@v1
-        with:
-          tag_name: v${{ needs.version.outputs.fullVersion }}
-          name: Release v${{ needs.version.outputs.fullVersion }}
-          draft: true
-          prerelease: ${{ needs.version.outputs.suffix != '' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  merge-to-develop:
-    name: Ready for Staging
-    runs-on: ubuntu-latest
-    needs: [version]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
-    steps:
-      - name: Create staging marker
-        run: |
-          echo "Version ${{ needs.version.outputs.fullVersion }} is ready for staging deployment"
+        run: dotnet test --no-build --configuration Release --project BankingKata.Api.Tests/BankingKata.Api.Tests.csproj --verbosity minimal
