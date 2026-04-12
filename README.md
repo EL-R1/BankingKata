@@ -58,8 +58,6 @@ graph TB
     ITxRepo -.->|implémenté par| InMemTxRepo
 ```
 
-![Architecture Hexagonale](./architecture.png)
-
 ### Structure du Projet
 
 ```
@@ -108,25 +106,8 @@ BankingKata/
 │   ├── AccountsControllerTests.cs
 │   └── SavingsControllerTests.cs
 │
-├── .github/
-│   ├── workflows/
-│   │   ├── ci.yml                  # Pipeline CI
-│   │   └── cd.yml                  # Pipeline CD
-│   └── environments/
-│       ├── staging.json
-│       └── production.json
-│
-├── k8s/                            # ☸️ Kubernetes
-│   ├── charts/bankingkata-api/     # Helm chart
-│   └── environments/               # Overlays
-│       ├── staging/
-│       └── production/
-│
-├── Dockerfile                       # 🐳 Multi-stage build
-├── docker-compose.yml               # Dev environment
-├── docker-compose.prod.yml          # Prod with Traefik
-├── GitVersion.yml                  # 📋 Versioning strategy
-└── .dockerignore
+└── .github/workflows/
+    └── ci.yml                      # Pipeline CI
 ```
 
 ### Principes de l'Architecture Hexagonale
@@ -369,11 +350,9 @@ Une décision de design importante : les deux types de comptes (`BankAccount` et
 
 ---
 
-## CI/CD Pipeline
+## CI Pipeline
 
-### GitHub Actions Workflows
-
-#### CI Pipeline (`.github/workflows/ci.yml`)
+### GitHub Actions (`.github/workflows/ci.yml`)
 
 | Étape | Description |
 |-------|-------------|
@@ -381,68 +360,4 @@ Une décision de design importante : les deux types de comptes (`BankAccount` et
 | Setup .NET | Installation .NET 8 |
 | Restore | Restauration des dépendances |
 | Build | Compilation en Release |
-| Tests | Tests unitaires |
-| Integration Tests | Tests d'intégration API |
-
-#### CD Pipeline (`.github/workflows/cd.yml`)
-
-| Étape | Description |
-|-------|-------------|
-| Checkout | Récupération du code |
-| Docker Buildx | Configuration multi-platform |
-| Login | Connexion à GHCR |
-| Build & Push | Construction et push de l'image Docker |
-
-### Docker
-
-#### Dockerfile
-
-```dockerfile
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
-# ... build steps ...
-
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
-WORKDIR /app
-EXPOSE 5000
-ENTRYPOINT ["dotnet", "BankingKata.Api.dll"]
-```
-
-#### Docker Compose
-
-```bash
-# Développement
-docker-compose up -d
-
-# Production avec Traefik
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-### Kubernetes
-
-#### Helm Chart
-
-```bash
-# Staging
-helm upgrade --install bankingkata ./k8s/charts/bankingkata-api \
-  -f ./k8s/environments/staging/values.yaml \
-  -n bankingkata --create-namespace
-
-# Production
-helm upgrade --install bankingkata ./k8s/charts/bankingkata-api \
-  -f ./k8s/environments/production/values.yaml \
-  -n bankingkata --create-namespace
-```
-
-### Commandes Utiles
-
-```bash
-# Build local Docker
-docker build -t bankingkata-api:latest .
-
-# Run avec docker-compose
-docker-compose up -d
-
-# Run avec monitoring
-docker-compose -f docker-compose.prod.yml up -d
-```
+| Tests | Tests unitaires + d'intégration |

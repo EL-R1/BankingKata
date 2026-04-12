@@ -1,9 +1,0 @@
-{
-  "deploymentBranchPolicy": {
-    "protected_branches": true,
-    "custom_branch_policy": false
-  },
-  "wait_timer": 0,
-  "reviewers": [],
-  "deployment_user_mode": "active"
-}
