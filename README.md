@@ -371,66 +371,41 @@ Une décision de design importante : les deux types de comptes (`BankAccount` et
 
 ## CI/CD Pipeline
 
-### Vue d'ensemble
-
-```mermaid
-flowchart LR
-    subgraph CI["CI - Continuous Integration"]
-        direction TB
-        CI1[Checkout] --> CI2[Restore] --> CI3[Build] --> CI4[Tests] --> CI5[Quality] --> CI6[Version]
-    end
-
-    subgraph CD["CD - Continuous Deployment"]
-        direction TB
-        CD1[Build Image] --> CD2[Push to Registry] --> CD3[Deploy Staging] --> CD4[Smoke Tests] --> CD5[Deploy Production]
-    end
-
-    CI6 -->|On Main| CD1
-```
-
-### Stratégie de Versioning
-
-| Branche | Version | Increment | Description |
-|---------|---------|-----------|-------------|
-| `main` | `1.0.0` | Patch | Production |
-| `develop` | `1.1.0` | Minor | Staging |
-| `feature/*` | `1.1.0-feature.1` | - | Développement |
-| `hotfix/*` | `1.0.1` | Patch | Correctif urgent |
-| `release/*` | `1.1.0` | - | Release candidate |
-
 ### GitHub Actions Workflows
 
 #### CI Pipeline (`.github/workflows/ci.yml`)
 
-| Job | Description |
-|-----|-------------|
-| `ci` | Build + Tests unitaires + Couverture |
-| `api-integration-tests` | Tests d'intégration API |
-| `quality-checks` | Format + Security analysis |
-| `docker-build-check` | Validation Docker (PR only) |
-| `version` | Calcul de version (GitVersion) |
+| Étape | Description |
+|-------|-------------|
+| Checkout | Récupération du code |
+| Setup .NET | Installation .NET 8 |
+| Restore | Restauration des dépendances |
+| Build | Compilation en Release |
+| Tests | Tests unitaires |
+| Integration Tests | Tests d'intégration API |
 
 #### CD Pipeline (`.github/workflows/cd.yml`)
 
-| Job | Description |
-|-----|-------------|
-| `build-and-push` | Build + Push multi-platform (amd64, arm64) |
-| `deploy-staging` | Déploiement sur staging |
-| `deploy-production` | Déploiement sur production (avec approbation) |
-| `rollback` | Rollback automatique sur échec |
+| Étape | Description |
+|-------|-------------|
+| Checkout | Récupération du code |
+| Docker Buildx | Configuration multi-platform |
+| Login | Connexion à GHCR |
+| Build & Push | Construction et push de l'image Docker |
 
 ### Docker
 
-#### Dockerfile Multi-stage
+#### Dockerfile
 
 ```dockerfile
-# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+# ... build steps ...
 
-# Runtime stage (non-root)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
-USER appuser
-HEALTHCHECK CMD curl -f http://localhost:5000/api/health
+WORKDIR /app
+EXPOSE 5000
+ENTRYPOINT ["dotnet", "BankingKata.Api.dll"]
 ```
 
 #### Docker Compose
@@ -459,55 +434,10 @@ helm upgrade --install bankingkata ./k8s/charts/bankingkata-api \
   -n bankingkata --create-namespace
 ```
 
-### Configuration Requise
-
-#### GitHub Secrets
-
-| Secret | Description |
-|--------|-------------|
-| `GHCR_TOKEN` | Token pour push vers GHCR (optionnel, `GITHUB_TOKEN` suffit) |
-| `LETSENCRYPT_EMAIL` | Email pour Let's Encrypt |
-| `KUBE_CONFIG` | Config kubectl pour CD |
-
-#### GitHub Environments
-
-| Environment | Protection | Wait Timer |
-|------------|------------|------------|
-| `staging` | Aucune | 0 min |
-| `production` | Required reviewers | 60 min |
-
-### Flux de Déploiement
-
-```mermaid
-sequenceDiagram
-    participant Dev
-    participant GH as GitHub
-    participant CI as CI Pipeline
-    participant Container as GHCR
-    participant K8s as Kubernetes
-
-    Dev->>GH: Push sur feature/xxx
-    GH->>CI: Trigger CI
-    CI->>CI: Build + Tests
-    CI->>GH: PR Status Check
-
-    Dev->>GH: Merge sur develop
-    GH->>CI: Trigger CI + CD
-    CI->>CI: Build + Tests
-    CI->>CI: Versioning
-    CI->>Container: Push Image
-    CI->>K8s: Deploy to Staging
-
-    Dev->>GH: Create Release Tag
-    GH->>CI: Trigger CD
-    CI->>K8s: Deploy to Production
-    Note over K8s: 60 min wait timer<br/>with approval
-```
-
 ### Commandes Utiles
 
 ```bash
-# Build local
+# Build local Docker
 docker build -t bankingkata-api:latest .
 
 # Run avec docker-compose
@@ -515,10 +445,4 @@ docker-compose up -d
 
 # Run avec monitoring
 docker-compose -f docker-compose.prod.yml up -d
-
-# Helm template validation
-helm template ./k8s/charts/bankingkata-api --debug
-
-# Kustomize build
-kustomize build ./k8s/environments/staging
 ```
