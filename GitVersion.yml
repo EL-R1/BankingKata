@@ -1,0 +1,88 @@
+mode: Mainline
+tag-prefix: '[v]'
+branches:
+  main:
+    mode: Mainline
+    regex: ^main$
+    is-mainline: true
+    increment: Patch
+    prevent-increment-of-merged-branch-version: true
+    track-merge-target: false
+    tracks-release-branches: false
+    source-branches:
+      - develop
+      - feature
+      - hotfix
+      - release
+  
+  develop:
+    mode: Mainline
+    regex: ^dev(elop)?$
+    is-mainline: true
+    increment: Minor
+    prevent-increment-of-merged-branch-version: true
+    track-merge-target: false
+    tracks-release-branches: false
+    source-branches:
+      - main
+  
+  feature:
+    mode: ContinuousDelivery
+    regex: ^features?[/-]
+    is-mainline: false
+    increment: Minor
+    prevent-increment-of-merged-branch-version: false
+    track-merge-target: false
+    tracks-release-branches: false
+    source-branches:
+      - main
+      - develop
+  
+  release:
+    mode: Mainline
+    regex: ^releases?[/-]
+    is-mainline: true
+    increment: Patch
+    prevent-increment-of-merged-branch-version: true
+    track-merge-target: false
+    tracks-release-branches: false
+    source-branches:
+      - main
+      - develop
+      - hotfix
+  
+  hotfix:
+    mode: ContinuousDelivery
+    regex: ^hotfix(es)?[/-]
+    is-mainline: false
+    increment: Patch
+    prevent-increment-of-merged-branch-version: false
+    track-merge-target: false
+    tracks-release-branches: false
+    source-branches:
+      - main
+      - release
+
+ignore:
+  sha: []
+  commits-before: ''
+  commits-after: ''
+
+merge-message-formats:
+  squash:
+    pattern: '(?<fromBranch>.+)-\[(?<ticketId>[A-Z]+-\d+)\](?<message>.+)'
+    message: |
+      {类型}{消息}
+      
+      {细节}
+  merge:
+    pattern: '^(?<type>feat|fix|chore|docs|style|refactor|perf|test|ci|build|revert)(\(.+\))?(?<message>.*):(?<description>.*)'
+    message: |
+      {type}{scope}: {description}
+
+      {body}
+
+      {footers}
+
+snapshots:
+  build-metadata: 'Branch: {BranchName} Commit: {ShortSha}'

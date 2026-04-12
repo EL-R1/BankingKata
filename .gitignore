@@ -1,0 +1,50 @@
+# Build outputs
+bin/
+obj/
+out/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet
+*.nupkg
+**/packages/**
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Test results
+TestResults/
+coverage/
+*.trx
+*.coverage
+*.coveragexml
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+*.local
+
+# Docs node_modules (if you want to exclude)
+docs/node_modules/
+
+# Logs
+*.log
+logs/
+
+# Kubernetes
+*.kubeconfig
+secrets.yaml
