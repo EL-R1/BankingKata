@@ -2,10 +2,7 @@
 
 Application bancaire en **architecture hexagonale** (ports & adapters) avec .NET 8 et tests complets.
 
-## Architecture
-
-### Schéma de l'Architecture Hexagonale
-
+## Architecture Hexagonale
 ```mermaid
 graph TB
     subgraph "Couche API (Drivers)"
@@ -56,6 +53,39 @@ graph TB
     IRepo -.->|implémenté par| InMemRepo
     ISavRepo -.->|implémenté par| InMemSavRepo
     ITxRepo -.->|implémenté par| InMemTxRepo
+```
+
+### Flux de Données
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Controller
+    participant Service
+    participant Repository
+    participant DB
+
+    Note over Client,DB: COMMAND (Écriture)
+    Client->>Controller: POST /api/accounts
+    Controller->>Service: CreateAccount(dto)
+    Service->>Domain: new BankAccount()
+    Domain-->>Service: account
+    Service->>Repository: Save(account)
+    Repository->>DB: INSERT
+    DB-->>Repository: success
+    Repository-->>Service: saved
+    Service-->>Controller: result
+    Controller-->>Client: 201 Created
+
+    Note over Client,DB: QUERY (Lecture)
+    Client->>Controller: GET /api/accounts/1
+    Controller->>Service: GetAccount(1)
+    Service->>Repository: FindById(1)
+    Repository->>DB: SELECT
+    DB-->>Repository: entity
+    Repository-->>Service: dto
+    Service-->>Controller: account
+    Controller-->>Client: 200 OK
 ```
 
 ### Structure du Projet
