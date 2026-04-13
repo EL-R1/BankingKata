@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\BankingKata.Application\BankingKata.Application.csproj" />
+    <ProjectReference Include="..\BankingKata.Domain\BankingKata.Domain.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

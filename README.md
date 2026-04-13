@@ -26,29 +26,24 @@ graph TB
         InMemTxRepo["InMemoryTransactionRepository"]
     end
 
-    API --> AS
-    API --> SAS
-    
-    AS --> BA
-    AS --> InMemRepo
-    AS --> InMemTxRepo
-    AS --> T
-    
-    SAS --> SA
-    SAS --> InMemSavRepo
-    SAS --> InMemTxRepo
-    SAS --> T
-
-    subgraph "Ports (Interfaces)"
+    subgraph "Ports (Interfaces) - Domain"
         IRepo["IBankAccountRepository"]
         ISavRepo["ISavingsAccountRepository"]
         ITxRepo["ITransactionRepository"]
     end
 
-    AS -.->|implémente| IRepo
-    SAS -.->|implémente| ISavRepo
-    AS -.->|implémente| ITxRepo
-    SAS -.->|implémente| ITxRepo
+    API --> AS
+    API --> SAS
+    
+    AS --> BA
+    AS --> IRepo
+    AS --> ITxRepo
+    AS --> T
+    
+    SAS --> SA
+    SAS --> ISavRepo
+    SAS --> ITxRepo
+    SAS --> T
 
     IRepo -.->|implémenté par| InMemRepo
     ISavRepo -.->|implémenté par| InMemSavRepo
@@ -95,20 +90,20 @@ BankingKata/
 ├── BankingKata.sln
 │
 ├── BankingKata.Domain/              # 🟢 Core - Règles métier pures
-│   └── Entities/
-│       ├── BankAccount.cs           # Compte courant
-│       ├── SavingsAccount.cs        # Livret d'épargne
-│       └── Transaction.cs           # Opération
+│   ├── Entities/
+│   │   ├── BankAccount.cs           # Compte courant
+│   │   ├── SavingsAccount.cs        # Livret d'épargne
+│   │   └── Transaction.cs           # Opération
+│   └── Ports/                       # Interfaces (contrats métier)
+│       ├── IBankAccountRepository.cs
+│       ├── ISavingsAccountRepository.cs
+│       └── ITransactionRepository.cs
 │
 ├── BankingKata.Application/         # 🟡 Use Cases
 │   ├── DTOs/                       # Data Transfer Objects
 │   │   ├── BankAccountDto.cs
 │   │   ├── SavingsAccountDto.cs
 │   │   └── StatementDto.cs
-│   ├── Ports/                      # Interfaces (contrats)
-│   │   ├── IBankAccountRepository.cs
-│   │   ├── ISavingsAccountRepository.cs
-│   │   └── ITransactionRepository.cs
 │   └── UseCases/                    # Logique applicative
 │       ├── BankAccountService.cs
 │       └── SavingsAccountService.cs
@@ -145,9 +140,10 @@ BankingKata/
 | Principe | Implémentation |
 |----------|----------------|
 | **Indépendance du domaine** | `BankingKata.Domain` n'a aucune dépendance externe |
-| **Ports (interfaces)** | `IBankAccountRepository`, `ITransactionRepository` |
-| **Adapters** | Implémentations concrètes (`InMemoryBankAccountRepository`) |
-| **Use Cases** | `BankAccountService`, `SavingsAccountService` |
+| **Dependency Rule** | Le Domain définit les ports; les couches extérieures dépendent du Domain |
+| **Ports (interfaces)** | Dans `Domain/Ports/` : `IBankAccountRepository`, `ITransactionRepository` |
+| **Adapters** | Implémentations concrètes dans `Infrastructure/Persistence/` |
+| **Use Cases** | `BankAccountService`, `SavingsAccountService` dans `Application/UseCases/` |
 | **Injection de dépendances** | .NET DI container dans `Program.cs` |
 
 ## Fonctionnalités

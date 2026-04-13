@@ -1,5 +1,5 @@
-using BankingKata.Application.Ports;
 using BankingKata.Application.UseCases;
+using BankingKata.Domain.Ports;
 using BankingKata.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);

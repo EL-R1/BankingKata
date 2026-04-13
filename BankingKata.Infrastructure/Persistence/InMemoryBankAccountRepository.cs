@@ -1,28 +1,28 @@
-using BankingKata.Application.DTOs;
-using BankingKata.Application.Ports;
+using BankingKata.Domain.Entities;
+using BankingKata.Domain.Ports;
 
 namespace BankingKata.Infrastructure.Persistence;
 
 public class InMemoryBankAccountRepository : IBankAccountRepository
 {
-    private readonly Dictionary<string, BankAccountDto> _accounts = new();
+    private readonly Dictionary<string, BankAccount> _accounts = new();
 
-    public BankAccountDto? GetByAccountNumber(string accountNumber)
+    public BankAccount? GetByAccountNumber(string accountNumber)
     {
         return _accounts.GetValueOrDefault(accountNumber);
     }
 
-    public IEnumerable<BankAccountDto> GetAll()
+    public IEnumerable<BankAccount> GetAll()
     {
         return _accounts.Values;
     }
 
-    public void Save(BankAccountDto account)
+    public void Save(BankAccount account)
     {
         _accounts[account.AccountNumber] = account;
     }
 
-    public void Update(BankAccountDto account)
+    public void Update(BankAccount account)
     {
         if (!_accounts.ContainsKey(account.AccountNumber))
             throw new InvalidOperationException($"Account {account.AccountNumber} not found");
