@@ -18,7 +18,8 @@ public class SavingsController : ControllerBase
     [HttpGet]
     public ActionResult<IEnumerable<SavingsAccountDto>> GetAll()
     {
-        return Ok(_service.GetAllAccounts());
+        var accounts = _service.GetAllAccounts().ToList();
+        return accounts.Count == 0 ? NoContent() : Ok(accounts);
     }
 
     [HttpGet("{accountNumber}")]
@@ -93,15 +94,7 @@ public class SavingsController : ControllerBase
     {
         try
         {
-            StatementDto statement;
-            if (fromDate.HasValue && toDate.HasValue)
-            {
-                statement = _service.GetStatementInRange(accountNumber, fromDate.Value, toDate.Value);
-            }
-            else
-            {
-                statement = _service.GetStatement(accountNumber);
-            }
+            var statement = _service.GetStatement(accountNumber, fromDate, toDate);
             return Ok(statement);
         }
         catch (InvalidOperationException ex)

@@ -5,7 +5,7 @@ using BankingKata.Application.UseCases;
 namespace BankingKata.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/accounts")]
 public class AccountsController : ControllerBase
 {
     private readonly BankAccountService _service;
@@ -18,7 +18,8 @@ public class AccountsController : ControllerBase
     [HttpGet]
     public ActionResult<IEnumerable<BankAccountDto>> GetAll()
     {
-        return Ok(_service.GetAllAccounts());
+        var accounts = _service.GetAllAccounts().ToList();
+        return accounts.Count == 0 ? NoContent() : Ok(accounts);
     }
 
     [HttpGet("{accountNumber}")]
@@ -82,7 +83,7 @@ public class AccountsController : ControllerBase
         }
     }
 
-    [HttpPost("{accountNumber}/overdraft")]
+    [HttpPatch("{accountNumber}/overdraft")]
     public ActionResult<BankAccountDto> SetOverdraft(string accountNumber, [FromBody] SetOverdraftDto dto)
     {
         try
@@ -105,15 +106,7 @@ public class AccountsController : ControllerBase
     {
         try
         {
-            StatementDto statement;
-            if (fromDate.HasValue && toDate.HasValue)
-            {
-                statement = _service.GetStatementInRange(accountNumber, fromDate.Value, toDate.Value);
-            }
-            else
-            {
-                statement = _service.GetStatement(accountNumber);
-            }
+            var statement = _service.GetStatement(accountNumber, fromDate, toDate);
             return Ok(statement);
         }
         catch (InvalidOperationException ex)

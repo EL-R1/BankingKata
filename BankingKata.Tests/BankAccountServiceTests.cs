@@ -214,7 +214,7 @@ public class BankAccountServiceTests
         var fromDate = DateTime.UtcNow.AddDays(-7);
         var toDate = DateTime.UtcNow;
 
-        var statement = _service.GetStatementInRange("ACC001", fromDate, toDate);
+        var statement = _service.GetStatement("ACC001", fromDate, toDate);
 
         Assert.Single(statement.Operations);
     }

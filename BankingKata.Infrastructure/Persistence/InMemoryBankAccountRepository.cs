@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using BankingKata.Domain.Entities;
 using BankingKata.Domain.Ports;
 
@@ -5,21 +6,25 @@ namespace BankingKata.Infrastructure.Persistence;
 
 public class InMemoryBankAccountRepository : IBankAccountRepository
 {
-    private readonly Dictionary<string, BankAccount> _accounts = new();
+    private readonly ConcurrentDictionary<string, BankAccount> _accounts = new();
 
     public BankAccount? GetByAccountNumber(string accountNumber)
     {
-        return _accounts.GetValueOrDefault(accountNumber);
+        _accounts.TryGetValue(accountNumber, out var account);
+        return account;
     }
 
     public IEnumerable<BankAccount> GetAll()
     {
-        return _accounts.Values;
+        return _accounts.Values.Select(a => new BankAccount(a.AccountNumber, a.Balance, a.OverdraftLimit)).ToList();
     }
 
     public void Save(BankAccount account)
     {
-        _accounts[account.AccountNumber] = account;
+        if (!_accounts.TryAdd(account.AccountNumber, account))
+        {
+            throw new InvalidOperationException($"Account {account.AccountNumber} already exists");
+        }
     }
 
     public void Update(BankAccount account)

@@ -141,7 +141,7 @@ public class AccountsControllerTests : IClassFixture<WebApplicationFactory<Progr
         await _client.PostAsJsonAsync("/api/accounts", 
             new { accountNumber = "TEST023", initialBalance = 100 });
 
-        var response = await _client.PostAsJsonAsync("/api/accounts/TEST023/overdraft", 
+        var response = await _client.PatchAsJsonAsync("/api/accounts/TEST023/overdraft", 
             new { overdraftLimit = 500 });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -152,7 +152,7 @@ public class AccountsControllerTests : IClassFixture<WebApplicationFactory<Progr
     [Fact]
     public async Task SetOverdraft_NonExistingAccount_ShouldReturnNotFound()
     {
-        var response = await _client.PostAsJsonAsync("/api/accounts/NONEXISTENT/overdraft", 
+        var response = await _client.PatchAsJsonAsync("/api/accounts/NONEXISTENT/overdraft", 
             new { overdraftLimit = 500 });
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);

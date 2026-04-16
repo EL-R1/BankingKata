@@ -9,7 +9,7 @@ public class Transaction
     public DateTime Date { get; }
     public decimal BalanceAfterTransaction { get; }
 
-    public Transaction(string accountNumber, decimal amount, TransactionType type, decimal balanceAfterTransaction)
+    public Transaction(string accountNumber, decimal amount, TransactionType type, decimal balanceAfterTransaction, DateTime? date = null)
     {
         if (string.IsNullOrWhiteSpace(accountNumber))
             throw new ArgumentException("Account number cannot be empty", nameof(accountNumber));
@@ -20,9 +20,15 @@ public class Transaction
         AccountNumber = accountNumber;
         Amount = amount;
         Type = type;
-        Date = DateTime.UtcNow;
+        Date = date ?? DateTime.UtcNow;
         BalanceAfterTransaction = balanceAfterTransaction;
     }
+
+    public static Transaction CreateDeposit(string accountNumber, decimal amount, decimal balanceAfterTransaction, DateTime? date = null)
+        => new(accountNumber, amount, TransactionType.Deposit, balanceAfterTransaction, date);
+
+    public static Transaction CreateWithdrawal(string accountNumber, decimal amount, decimal balanceAfterTransaction, DateTime? date = null)
+        => new(accountNumber, amount, TransactionType.Withdrawal, balanceAfterTransaction, date);
 }
 
 public enum TransactionType

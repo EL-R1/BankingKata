@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using BankingKata.Domain.Entities;
 using BankingKata.Domain.Ports;
 
@@ -5,7 +6,7 @@ namespace BankingKata.Infrastructure.Persistence;
 
 public class InMemoryTransactionRepository : ITransactionRepository
 {
-    private readonly List<Transaction> _transactions = new();
+    private readonly ConcurrentBag<Transaction> _transactions = new();
 
     public void Save(Transaction transaction)
     {
@@ -16,13 +17,15 @@ public class InMemoryTransactionRepository : ITransactionRepository
     {
         return _transactions
             .Where(t => t.AccountNumber == accountNumber)
-            .OrderByDescending(t => t.Date);
+            .OrderByDescending(t => t.Date)
+            .ToList();
     }
 
     public IEnumerable<Transaction> GetByAccountNumberInRange(string accountNumber, DateTime fromDate, DateTime toDate)
     {
         return _transactions
             .Where(t => t.AccountNumber == accountNumber && t.Date >= fromDate && t.Date <= toDate)
-            .OrderByDescending(t => t.Date);
+            .OrderByDescending(t => t.Date)
+            .ToList();
     }
 }
