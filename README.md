@@ -105,8 +105,7 @@ BankingKata/
 │   │   ├── SavingsAccountDto.cs
 │   │   └── StatementDto.cs
 │   └── UseCases/                    # Logique applicative
-│       ├── BankAccountService.cs
-│       └── SavingsAccountService.cs
+│       ├── AccountServices.cs        # BankAccountService + SavingsAccountService unifiés
 │
 ├── BankingKata.Infrastructure/      # 🔵 Adapters - Implémentations
 │   └── Persistence/
@@ -205,7 +204,7 @@ Historique des opérations sur un mois glissant.
 | `POST` | `/api/accounts` | Crée un compte | `CreateAccountDto` |
 | `POST` | `/api/accounts/{accountNumber}/deposit` | Dépôt | `TransactionDto` |
 | `POST` | `/api/accounts/{accountNumber}/withdraw` | Retrait | `TransactionDto` |
-| `POST` | `/api/accounts/{accountNumber}/overdraft` | Modifie le découvert | `SetOverdraftDto` |
+| `PATCH` | `/api/accounts/{accountNumber}/overdraft` | Modifie le découvert | `SetOverdraftDto` |
 | `GET` | `/api/accounts/{accountNumber}/statement` | Relevé de compte | Query params: `fromDate`, `toDate` |
 
 ### Livrets d'Épargne
